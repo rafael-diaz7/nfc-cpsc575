@@ -27,6 +27,9 @@ public class MainActivity extends AppCompatActivity {
     // write to NFC tag
 
     // button that writes to nfc - generates NDEF record to write
+    // We will need to use NfcAdapter it seems.
+    // We should look at createURI method in NdefRecord class
+    // https://developer.android.com/reference/android/nfc/NdefRecord.html#createUri%28android.net.Uri%29
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
