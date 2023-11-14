@@ -29,7 +29,7 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     private static final String STRING_KEY = "URL";
-    private static final List<String> PROTOCOLS = Arrays.asList("http://", "https://");
+    private static final List<String> PROTOCOLS = Arrays.asList("https://", "http://");
     private static final int SELECTED_ITEM = 0;
     private String selected_url;
     private Uri created_uri;
