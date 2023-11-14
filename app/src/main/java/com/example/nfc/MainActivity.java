@@ -5,7 +5,6 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.Activity;
 import android.app.PendingIntent;
-import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.nfc.FormatException;
@@ -38,7 +37,6 @@ public class MainActivity extends AppCompatActivity {
     TextView textView;
     Spinner spinner;
     Tag my_tag;
-    Context context;
     Activity act;
     PendingIntent pendingIntent;
     NfcAdapter nfcAdapter;
@@ -57,9 +55,8 @@ public class MainActivity extends AppCompatActivity {
         textView = findViewById(R.id.text);
         spinner = findViewById(R.id.spinner);
         setSpinner();
-        context = this;
         act = this;
-        nfcAdapter = NfcAdapter.getDefaultAdapter(context);
+        nfcAdapter = NfcAdapter.getDefaultAdapter(this);
         pendingIntent = PendingIntent.getActivity(this, 0, new Intent(this, this.getClass()).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP), PendingIntent.FLAG_MUTABLE);
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -99,9 +96,10 @@ public class MainActivity extends AppCompatActivity {
             ndef.connect();
             ndef.writeNdefMessage(message);
             ndef.close();
+            Toast.makeText(this, "Write to tag successful!", Toast.LENGTH_SHORT).show();
         }
         catch(IOException | FormatException e){
-            Toast.makeText(context, "Write Failed", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Write Failed", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -120,7 +118,6 @@ public class MainActivity extends AppCompatActivity {
         {
             Tag tag = (Tag) intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
             assert tag != null;
-            Toast.makeText(this, "Tag Found!", Toast.LENGTH_SHORT).show();
             writeTag(created_uri, tag);
         }
 
@@ -143,7 +140,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setSpinner(){
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, PROTOCOLS);
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, R.layout.spinner_layout_simple, PROTOCOLS);
         spinner.setAdapter(adapter);
     }
 }
