@@ -14,11 +14,13 @@ import android.nfc.NfcAdapter;
 import android.nfc.Tag;
 import android.nfc.tech.Ndef;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.Spinner;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -33,20 +35,13 @@ public class MainActivity extends AppCompatActivity {
     private String selected_url;
     private Uri created_uri;
     private String selected_protocol;
+    private boolean write;
     Button button;
     TextView textView;
     Spinner spinner;
-    Tag my_tag;
     Activity act;
     PendingIntent pendingIntent;
     NfcAdapter nfcAdapter;
-
-    // write to NFC tag
-
-    // button that writes to nfc - generates NDEF record to write
-    // We will need to use NfcAdapter it seems.
-    // We should look at createURI method in NdefRecord class
-    // https://developer.android.com/reference/android/nfc/NdefRecord.html#createUri%28android.net.Uri%29
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,7 +52,10 @@ public class MainActivity extends AppCompatActivity {
         setSpinner();
         act = this;
         nfcAdapter = NfcAdapter.getDefaultAdapter(this);
-        pendingIntent = PendingIntent.getActivity(this, 0, new Intent(this, this.getClass()).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP), PendingIntent.FLAG_MUTABLE);
+        pendingIntent = PendingIntent.getActivity(this,
+                0,
+                new Intent(this, this.getClass()).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),
+                PendingIntent.FLAG_MUTABLE);
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int pos, long l) {
@@ -76,8 +74,9 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(MainActivity.this, selected_protocol + selected_url, Toast.LENGTH_SHORT).show();
             created_uri = Uri.parse(selected_protocol + selected_url);
             nfcAdapter.enableForegroundDispatch(act, pendingIntent, null, null);
-            my_tag = getIntent().getParcelableExtra(NfcAdapter.EXTRA_TAG);
         });
+
+
     }
 
     @Override
@@ -112,13 +111,45 @@ public class MainActivity extends AppCompatActivity {
 
     private void resolveIntent(Intent intent) {
         String action = intent.getAction();
-        if (NfcAdapter.ACTION_TAG_DISCOVERED.equals(action) ||
-            NfcAdapter.ACTION_TECH_DISCOVERED.equals(action) ||
-            NfcAdapter.ACTION_NDEF_DISCOVERED.equals(action))
-        {
-            Tag tag = (Tag) intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
-            assert tag != null;
-            writeTag(created_uri, tag);
+        Switch switch1 = findViewById(R.id.switch1);
+        write = switch1.isChecked();
+        // write tag
+        if (write) {
+            if (NfcAdapter.ACTION_TAG_DISCOVERED.equals(action) ||
+                    NfcAdapter.ACTION_TECH_DISCOVERED.equals(action) ||
+                    NfcAdapter.ACTION_NDEF_DISCOVERED.equals(action)) {
+                Tag tag = (Tag) intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
+                assert tag != null;
+                writeTag(created_uri, tag);
+            }
+        }
+        // read tag
+        else {
+            if (NfcAdapter.ACTION_NDEF_DISCOVERED.equals(action)){
+                Parcelable[] rawMessages = intent.getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES);
+                if(rawMessages != null) {
+
+                    NdefMessage[] messages = new NdefMessage[rawMessages.length];
+                    for(int i = 0; i < rawMessages.length; i++) {
+
+                        messages[i] = (NdefMessage) rawMessages[i];
+
+                    }
+                    for(NdefMessage message : messages){
+                        NdefRecord[] records = message.getRecords();
+                        for (NdefRecord record:records){
+                            byte[] payload = record.getPayload();
+                            String scheme = "";
+                            if(payload[0]==4){
+                                scheme = "https://";
+                            }
+                            String utfMSG = new String(Arrays.copyOfRange(payload, 1, payload.length));
+                            Toast.makeText(this, scheme+utfMSG, Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                }
+            }
+
         }
 
     }
