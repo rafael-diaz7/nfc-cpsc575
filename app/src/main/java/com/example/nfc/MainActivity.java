@@ -138,6 +138,15 @@ public class MainActivity extends AppCompatActivity {
                     for(NdefMessage message : messages){
                         NdefRecord[] records = message.getRecords();
                         for (NdefRecord record:records){
+
+                            // the following commented code will parse the tag IF you know what the type is beforehand
+                            // byte[] header = record.getType();
+                        	//short tnf = record.getTnf();
+                        	//if(tnf==1){
+                            //	Uri read_uri = record.toUri();
+                            //	int i = 4;
+                        	//}
+
                             byte[] payload = record.getPayload();
                             String scheme = "";
                             if(payload[0]==4){
